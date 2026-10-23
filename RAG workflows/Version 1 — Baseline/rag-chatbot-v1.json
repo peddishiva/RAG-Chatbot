@@ -1,0 +1,466 @@
+{
+  "name": "RAG chatbot for company",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "company-files",
+          "mode": "list",
+          "cachedResultName": "company-files"
+        },
+        "options": {}
+      },
+      "id": "753455a3-ddc8-4a74-b043-70a0af38ff9e",
+      "name": "Pinecone Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        912,
+        368
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "a7c8fa7f-cad2-4497-a295-30aa2e98cacc",
+      "name": "Embeddings Google Gemini",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "position": [
+        880,
+        640
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "binaryMode": "specificField",
+        "options": {}
+      },
+      "id": "215f0519-4359-4e4b-a90c-7e54b1cc52b5",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        1072,
+        592
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "id": "863d3d1d-1621-406e-8320-688f64b07b09",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        1056,
+        784
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a helpful HR assistant designed to answer employee questions based on company policies.\n\nRetrieve relevant information from the provided internal documents and provide a concise, accurate, and informative answer to the employee's question.\n\nUse the tool called \"company_documents_tool\" to retrieve any information from the company's documents.\n\nIf the answer cannot be found in the provided documents, respond with \"I cannot find the answer in the available resources.\"\n\nAnswer questions using the company documents retrieved by the document-search tool.\n\n- Include every relevant step, item, and stage mentioned in the source.\n- Preserve the original order of steps.\n- Before responding, check whether the answer covers the entire requested sequence.\n- Do not stop after the first few steps when the source contains more.\n- Do not invent missing information. If the retrieved documents do not contain the complete answer, clearly say so."
+        }
+      },
+      "id": "5af1efb1-ea69-466e-bb3b-2b7e6b1ceef7",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        656,
+        1200
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "name": "company_documents_tool",
+        "description": "Retrieve information from any company documents",
+        "topK": 8
+      },
+      "id": "825632ac-1edf-4e63-948d-b1a498b2b962",
+      "name": "Vector Store Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "position": [
+        1056,
+        1424
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "company-files",
+          "mode": "list",
+          "cachedResultName": "company-files"
+        },
+        "options": {}
+      },
+      "id": "72d2f685-bcc3-4e62-a5e3-72c0fe65f8e8",
+      "name": "Pinecone Vector Store (Retrieval)",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        960,
+        1632
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "eeff81cb-6aec-4e7f-afe0-432d87085fb2",
+      "name": "Embeddings Google Gemini (retrieval)",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "position": [
+        928,
+        1776
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "fileName": "={{ $json.name }}"
+        }
+      },
+      "id": "8bb6ebb1-1deb-498b-8da4-b809a736e097",
+      "name": "Download File From Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        688,
+        368
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "content": "## Chat with company documents",
+        "height": 80,
+        "width": 208,
+        "color": 5
+      },
+      "id": "bd83bacf-dff1-4b7c-af5c-b249fb16c113",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        656,
+        1024
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_DRIVE_FOLDER_ID",
+          "mode": "id"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "id": "7b90daab-0fb2-4c8a-93e6-b138bb04f282",
+      "name": "Google Drive File Updated",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "position": [
+        368,
+        512
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_DRIVE_FOLDER_ID",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {
+          "fileType": "all"
+        }
+      },
+      "id": "3a6c6cef-7a19-42ef-8092-eaf57dae4cdd",
+      "name": "Google Drive File Created",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "position": [
+        368,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "1e38f1c8-7bd0-4eeb-addc-62339582d350",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        736,
+        1504
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "4b0ab858-99b1-4337-8c5c-a223519e3662",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        320,
+        1200
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "content": "## Add docuemnts to vector store when updating or creating new documents in Google Drive",
+        "height": 112,
+        "width": 384,
+        "color": 5
+      },
+      "id": "bfb684d1-e5c1-41da-8305-b2606a2eade6",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        640,
+        208
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### RAG Chatbot – Setup Instructions\n\n1. **Google Drive:** Create a `Company RAG Documents` folder and configure OAuth2 credentials. Connect both triggers to detect new and updated files.\n\n2. **Gemini Embeddings:** Add your Google Gemini API credential and select `models/gemini-embedding-001` in both embedding nodes.\n\n3. **Pinecone:** Configure your API credential and select the `company-files` index in both vector store nodes. Ensure the index dimension matches the embedding output.\n\n4. **OpenRouter:** Add your API credential and select an available chat model in both OpenRouter nodes. Connect them to the AI Agent and Vector Store Tool.\n\n5. **Import Workflow:** Import the workflow JSON into n8n, configure your credentials and resources, then save.\n\n6. **Ingest Documents:** Upload a PDF to Google Drive and verify that it is downloaded, split into chunks, embedded, and stored in Pinecone.\n\n7. **Test Chatbot:** Ask questions about the uploaded document and verify that answers match the source content.",
+        "height": 608,
+        "width": 340,
+        "color": 5
+      },
+      "id": "578deb96-8393-4850-9757-fa97b2bc9992",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -64,
+        432
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "openrouter/free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        1600
+      ],
+      "id": "1ad099c2-a292-4069-814c-43268ae5ea3f",
+      "name": "OpenRouter Chat Model2"
+    },
+    {
+      "parameters": {
+        "model": "openrouter/free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        448,
+        1504
+      ],
+      "id": "584ddba0-eeec-4ecd-9540-96edb7ab3b20",
+      "name": "OpenRouter Chat Model1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Vector Store Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "main": [
+        []
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive File Created": {
+      "main": [
+        [
+          {
+            "node": "Download File From Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive File Updated": {
+      "main": [
+        [
+          {
+            "node": "Download File From Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download File From Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store (Retrieval)": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Store Tool",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini (retrieval)": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store (Retrieval)",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Vector Store Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}

@@ -195,3 +195,7 @@ OpenRouter is used for chat and reasoning instead of the Gemini chat models.
 5. Test a question whose answer is absent from the documents to check how the chatbot handles missing information.
 
 The workflow is ready for further improvements once document ingestion and question answering both complete successfully.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

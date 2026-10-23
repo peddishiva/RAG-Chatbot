@@ -100,68 +100,98 @@ AI-generated response
 - An OpenRouter account and API key.
 - An embedding index dimension that matches the embedding output configuration.
 
-## Setup
 
-### 1. Import the workflow
+## Setup Instructions
 
-1. Download the workflow JSON from this repository once it is published.
-2. In n8n, open **Workflows** and select **Import from File**.
-3. Select the workflow JSON.
-4. Reconfigure credentials in your own n8n instance; credentials are not included in the shared workflow.
+Follow these steps to configure the RAG chatbot in your own n8n instance.
+
+### 1. Prerequisites
+
+Create accounts or set up access to the following services:
+
+- **n8n:** A local or hosted n8n instance.
+- **Google Drive:** Stores the company documents used by the chatbot.
+- **Google AI Studio:** Provides the Gemini API key used for generating document embeddings.
+- **Pinecone:** Stores document embeddings and supports semantic retrieval.
+- **OpenRouter:** Provides the chat models used by the AI Agent and Vector Store Tool.
 
 ### 2. Configure Google Drive
 
-1. Create a folder for the documents you want the chatbot to search.
-2. Configure Google Drive OAuth credentials in n8n.
-3. Select the correct folder in the Google Drive triggers.
-4. Verify that file download and document loading succeed.
+1. Open Google Drive and create a dedicated folder named `Company RAG Documents`.
+2. Open your local n8n dashboard.
+3. Navigate to **Credentials** and create a Google Drive OAuth2 credential.
+4. Follow the Google sign-in and authorization process.
+5. If your Google OAuth application is in testing mode, add your Google account under **Google Cloud Console → Google Auth Platform → Audience → Test users**, if required.
+6. Open both Google Drive Trigger nodes in the workflow.
+7. Configure them to monitor the `Company RAG Documents` folder.
+8. Set the trigger events to detect file creation and file updates.
+9. Test the triggers to verify that n8n can access the selected folder.
 
-### 3. Configure embeddings and Pinecone
+### 3. Configure Google Gemini Embeddings
 
-1. Add your Gemini API credential to the embedding nodes.
-2. Use the same embedding model and output dimension for document ingestion and retrieval.
-3. Configure the Pinecone credential and select your vector index.
-4. Ensure that the Pinecone index dimension matches the embedding output.
-5. Re-ingest documents after changing the embedding model or vector dimension.
+1. Open [Google AI Studio](https://aistudio.google.com/).
+2. Generate a Gemini API key.
+3. In n8n, navigate to **Credentials** and create a Google Gemini API credential.
+4. Enter the API key and save the credential.
+5. Open the `Embeddings Google Gemini` node in the document-ingestion branch.
+6. Select the Gemini API credential and configure the embedding model as `models/gemini-embedding-001`.
+7. Repeat this configuration for `Embeddings Google Gemini (retrieval)`.
+8. Ensure both embedding nodes use compatible output dimensions.
 
-### 4. Configure OpenRouter
+**Important:** The Pinecone index dimension must match the actual embedding output dimension. If you change the embedding model or dimensions later, re-embed and re-ingest the documents.
 
-1. Create an OpenRouter API key.
-2. Add the credential in n8n.
-3. Configure both OpenRouter Chat Model nodes: one for the AI Agent and one for the Vector Store Tool.
-4. Select a model available to your OpenRouter account. Free models can have usage limits, rate limits, and availability changes.
+### 4. Configure Pinecone
 
-### 5. Test
+1. Create an account at [Pinecone](https://www.pinecone.io/).
+2. Open the Pinecone dashboard and create an API key.
+3. Create a dense vector index named `company-files`.
+4. Configure the index dimension to match the embedding output dimension and select the cosine similarity metric.
+5. In n8n, create a Pinecone API credential using your Pinecone API key.
+6. Open the `Pinecone Vector Store` node in the ingestion branch.
+7. Select the Pinecone credential and the `company-files` index.
+8. Open `Pinecone Vector Store (Retrieval)` and select the same credential and index.
+9. Save your configuration.
 
-1. Add a sample document to your configured Google Drive folder.
-2. Confirm that ingestion completes and the vectors are stored.
-3. Open the n8n chat.
-4. Ask a question that can be answered from the source document.
-5. Compare the response against the original document for completeness and accuracy.
+### 5. Configure OpenRouter Chat Models
 
-## Security Notes
+OpenRouter is used for chat and reasoning instead of the Gemini chat models.
 
-- **Never commit API keys, OAuth tokens, passwords, or other secrets.**
-- Review exported workflow JSON before publishing. Remove credential values, tokens, private URLs, and sensitive node data where present.
-- n8n credential references may remain in the workflow export, but actual secrets should be managed through n8n credentials and configured separately after import.
-- Do not publish confidential company documents or private source material.
-- Prefer synthetic or non-sensitive example documents for public demonstrations.
+1. Open [OpenRouter](https://openrouter.ai/).
+2. Create an API key and keep it private.
+3. In n8n, navigate to **Credentials** and create an OpenRouter credential using the API key.
+4. Open the `OpenRouter Chat Model` node connected to `AI Agent`.
+5. Select your OpenRouter credential and choose an available model. The `openrouter/free` router can be used if available to your account.
+6. Open `OpenRouter Chat Model1`, connected to `Vector Store Tool`.
+7. Select the same OpenRouter credential and configure an available model.
+8. Verify that the first OpenRouter node connects to the AI Agent's **Chat Model** input and the second connects to the Vector Store Tool's **Model** input.
+9. Leave the Gemini embedding nodes configured as described in Step 3.
 
-## Current Limitations and Planned Improvements
+**Note:** OpenRouter free models may have request limits, rate limits, and changing availability.
 
-The current version demonstrates core document ingestion, vector search, and question answering. Further improvements are planned:
+### 6. Import the Workflow
 
-- **Source citations:** Return document names and relevant passage references with answers.
-- **Error handling:** Improve handling of model outages, rate limits, and failed ingestion.
-- **Answer evaluation:** Build a repeatable test set to assess relevance and faithfulness.
-- **Retrieval tuning:** Evaluate chunk sizes, overlap, and retrieval count.
-- **Fallback behavior:** Clearly indicate when the available documents do not contain an answer.
-- **Demonstration assets:** Add screenshots and example questions after final validation.
+1. Download the workflow JSON file from this repository.
+2. Open your n8n dashboard.
+3. Navigate to **Workflows**.
+4. Select **Import from File**.
+5. Choose the workflow JSON file.
+6. Open the imported workflow and configure your own credentials and resource selections.
+7. Save the workflow.
 
-## Repository Contents
+### 7. Ingest Company Documents
 
-The repository will contain the sanitized n8n workflow export and this documentation. Importing the workflow does not provision external services or credentials automatically; you must configure those in your own n8n instance.
+1. Upload a test PDF to the `Company RAG Documents` folder in Google Drive.
+2. Verify that the Google Drive trigger detects the file.
+3. Confirm that the download and document-loading nodes execute successfully.
+4. Check that the Recursive Character Text Splitter divides the document into chunks.
+5. Verify that Gemini embeddings are generated and the chunks are stored in the `company-files` Pinecone index.
 
-## License
+### 8. Test the Chatbot
 
-No license has been added yet. Unless a license is provided, standard copyright applies and reuse permissions are not granted automatically.
+1. Open the chat interface in n8n.
+2. Ask a question whose answer is present in the uploaded document.
+3. Verify that the AI Agent uses the Vector Store Tool to retrieve relevant passages.
+4. Compare the generated answer with the source document.
+5. Test a question whose answer is absent from the documents to check how the chatbot handles missing information.
+
+The workflow is ready for further improvements once document ingestion and question answering both complete successfully.
